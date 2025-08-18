@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: ms-starter
+data:
+  MONGO_DB: users_db
+  POSTGRES_DB: items_db
