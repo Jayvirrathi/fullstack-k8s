@@ -1,40 +1,52 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ms-starter-ingress
+  name: ms-starter-frontend
   namespace: ms-starter
   annotations:
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "false"
 spec:
   ingressClassName: nginx
   rules:
-    - host: app.local
-      http:
-        paths:
-          # Frontend: keep path after "/" (root) -> "/$1"
-          - path: /?(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: web-frontend
-                port:
-                  number: 80
+  - host: 127.0.0.1.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-frontend
+            port:
+              number: 80
 
-          # Node API: strip "/api-node" prefix
-          - path: /api-node/?(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: api-node
-                port:
-                  number: 80
 
-          # Python API: strip "/api-python" prefix
-          - path: /api-python/?(.*)
-            pathType: Prefix
-            backend:
-              service:
-                name: api-python
-                port:
-                  number: 80
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ms-starter-apis
+  namespace: ms-starter
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: 127.0.0.1.nip.io
+    http:
+      paths:
+      - path: /api-node(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: api-node
+            port:
+              number: 80
+      - path: /api-python(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: api-python
+            port:
+              number: 80

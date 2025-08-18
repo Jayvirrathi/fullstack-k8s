@@ -112,3 +112,66 @@ frontend/          # React frontend
 * **Node.js API** → `GET /health` on port **4005**
 * **FastAPI service** → `GET /health` on port **5005**
 * **React frontend** → available on port **5173**
+
+## Docker Compose Build
+```bash
+docker compose up --build
+
+#dev
+docker compose -f docker-compose-dev.yml up --build
+```
+
+## Setup
+```bash
+make k8s-deploy
+```
+
+
+
+## Port
+```bash
+kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8085:80
+
+# Create a user (Node.js API)
+curl -X POST http://127.0.0.1.nip.io:8085/api-node/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Alice","email":"alice@example.com"}'
+
+# Create an item (FastAPI service)
+curl -X POST http://127.0.0.1.nip.io:8085/api-python/api/items \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Sample Item"}'
+
+http://127.0.0.1.nip.io:8085/api-node/health
+
+http://127.0.0.1.nip.io:8085/api-python/health
+
+http://127.0.0.1.nip.io:8085/api-node/api/users
+
+http://127.0.0.1.nip.io:8085/api-python/api/items
+```
+
+
+## Delete
+```bash
+make k8s-deploy
+```
+
+## List Resources
+```bash
+kubectl get pods
+kubectl get services
+```
+
+## Delete Resources
+```bash
+kubectl delete all --all
+pkill -f "kubectl port-forward"
+```
+
+## Other Resources
+```bash
+kubectl delete services --all
+kubectl delete deployments --all
+```
+---

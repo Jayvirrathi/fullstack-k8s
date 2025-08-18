@@ -59,19 +59,12 @@ app.use(
 
 // ---------- MongoDB connection ----------
 mongoose
-  .connect('mongodb://mongo:27017/nodedb', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+  .connect(process.env.MONGO_URI, {
+    dbName: process.env.MONGO_DB || 'nodedb',
+    serverSelectionTimeoutMS: 30000,
   })
   .then(() => logger.info('Connected to MongoDB'))
   .catch((err) => logger.error({ err }, 'MongoDB connection error'));
-
-
-  // mongoose
-  // .connect(process.env.MONGO_URI, { dbName: process.env.MONGO_DB || 'users_db' })
-  // .then(() => console.log('MongoDB connected'))
-  // .catch((err) => console.error('Mongo error', err));
-
 
 // ---------- Prometheus metrics ----------
 const register = new client.Registry();

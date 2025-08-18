@@ -24,16 +24,19 @@ spec:
     spec:
       containers:
         - name: api-python
-          image: ghcr.io/example/api-python:latest
+          image: api-python:dev
+          imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 5000 }]
           env:
             - name: PORT
               value: "5000"
-            - name: DATABASE_URL
-              value: "postgresql+psycopg2://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres.ms-starter.svc.cluster.local:5432/$(POSTGRES_DB)"
             - name: POSTGRES_USER
               valueFrom: { secretKeyRef: { name: app-secrets, key: POSTGRES_USER } }
             - name: POSTGRES_PASSWORD
               valueFrom: { secretKeyRef: { name: app-secrets, key: POSTGRES_PASSWORD } }
             - name: POSTGRES_DB
               valueFrom: { configMapKeyRef: { name: app-config, key: POSTGRES_DB } }
+
+            # now this will expand properly
+            - name: DATABASE_URL
+              value: "postgresql+psycopg2://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres.ms-starter.svc.cluster.local:5432/$(POSTGRES_DB)"

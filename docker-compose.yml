@@ -22,7 +22,6 @@ services:
   api-node:
     build: ./services/api-node
     image: api-node:dev     
-    imagePullPolicy: IfNotPresent  
     env_file:
       - .env.example
     environment:
@@ -36,7 +35,6 @@ services:
   api-python:
     build: ./services/api-python
     image: api-python:dev   
-    imagePullPolicy: IfNotPresent  
     env_file:
       - .env.example
     environment:
@@ -50,7 +48,6 @@ services:
   web-frontend:
     build: ./services/web-frontend
     image: web-frontend:dev   
-    imagePullPolicy: IfNotPresent
     env_file:
       - .env.example
     environment:

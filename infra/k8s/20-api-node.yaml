@@ -24,12 +24,18 @@ spec:
     spec:
       containers:
         - name: api-node
-          image: ghcr.io/example/api-node:latest
+          image: api-node:dev
+          imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 4000 }]
           env:
             - name: PORT
               value: "4000"
             - name: MONGO_DB
               valueFrom: { configMapKeyRef: { name: app-config, key: MONGO_DB } }
+            # bring the same secret into the API pod
+            - name: MONGO_USER
+              valueFrom: { secretKeyRef: { name: app-secrets, key: MONGO_USER } }
+            - name: MONGO_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: MONGO_PASSWORD } }
             - name: MONGO_URI
-              value: "mongodb://mongo.ms-starter.svc.cluster.local:27017"
+              value: "mongodb://$(MONGO_USER):$(MONGO_PASSWORD)@mongo.ms-starter.svc.cluster.local:27017/?authSource=admin&directConnection=true"

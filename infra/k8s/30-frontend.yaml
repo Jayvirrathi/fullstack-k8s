@@ -24,7 +24,8 @@ spec:
     spec:
       containers:
         - name: web
-          image: ghcr.io/example/web-frontend:latest
+          image: web-frontend:dev
+          imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 80 }]
           env:
             - name: VITE_NODE_API_URL
