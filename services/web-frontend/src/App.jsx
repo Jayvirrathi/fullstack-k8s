@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-const NODE_API = import.meta.env.VITE_NODE_API_URL || 'http://localhost:4000'
-const PY_API = import.meta.env.VITE_PY_API_URL || 'http://localhost:5000'
+const NODE_API = import.meta.env.VITE_NODE_API_URL || 'http://localhost:4005'
+const PY_API = import.meta.env.VITE_PY_API_URL || 'http://localhost:5005'
 
 export default function App() {
   const [users, setUsers] = useState([])

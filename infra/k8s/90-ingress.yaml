@@ -4,27 +4,34 @@ metadata:
   name: ms-starter-ingress
   namespace: ms-starter
   annotations:
-    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
+  ingressClassName: nginx
   rules:
     - host: app.local
       http:
         paths:
-          - path: /
+          # Frontend: keep path after "/" (root) -> "/$1"
+          - path: /?(.*)
             pathType: Prefix
             backend:
               service:
                 name: web-frontend
                 port:
                   number: 80
-          - path: /api-node
+
+          # Node API: strip "/api-node" prefix
+          - path: /api-node/?(.*)
             pathType: Prefix
             backend:
               service:
                 name: api-node
                 port:
                   number: 80
-          - path: /api-python
+
+          # Python API: strip "/api-python" prefix
+          - path: /api-python/?(.*)
             pathType: Prefix
             backend:
               service:

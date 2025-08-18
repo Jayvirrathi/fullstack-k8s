@@ -2,9 +2,18 @@ import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from .db import SessionLocal, Item, init_db
+from fastapi.middleware.cors import CORSMiddleware
 
 PORT = int(os.getenv("PORT", 5000))
 app = FastAPI(title="api-python")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ItemIn(BaseModel):
     name: str

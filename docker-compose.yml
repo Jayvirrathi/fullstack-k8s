@@ -1,11 +1,12 @@
-version: "3.9"
 services:
   mongo:
     image: mongo:7
     restart: unless-stopped
-    ports: ["27017:27017"]
+    ports:
+      - "27015:27017"
     volumes:
       - mongo_data:/data/db
+
   postgres:
     image: postgres:16
     environment:
@@ -13,36 +14,53 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-items_db}
     restart: unless-stopped
-    ports: ["5432:5432"]
+    ports:
+      - "5435:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
 
   api-node:
     build: ./services/api-node
-    env_file: [.env.example]
+    image: api-node:dev     
+    imagePullPolicy: IfNotPresent  
+    env_file:
+      - .env.example
     environment:
       MONGO_URI: ${MONGO_URI}
       PORT: ${NODE_PORT:-4000}
-    depends_on: [mongo]
-    ports: ["4000:4000"]
+    depends_on:
+      - mongo
+    ports:
+      - "4005:4000"
 
   api-python:
     build: ./services/api-python
-    env_file: [.env.example]
+    image: api-python:dev   
+    imagePullPolicy: IfNotPresent  
+    env_file:
+      - .env.example
     environment:
       DATABASE_URL: ${POSTGRES_URI}
       PORT: ${PY_PORT:-5000}
-    depends_on: [postgres]
-    ports: ["5000:5000"]
+    depends_on:
+      - postgres
+    ports:
+      - "5005:5000"
 
   web-frontend:
     build: ./services/web-frontend
-    env_file: [.env.example]
+    image: web-frontend:dev   
+    imagePullPolicy: IfNotPresent
+    env_file:
+      - .env.example
     environment:
-      VITE_NODE_API_URL: http://localhost:4000
-      VITE_PY_API_URL: http://localhost:5000
-    depends_on: [api-node, api-python]
-    ports: ["5173:5173"]
+      VITE_NODE_API_URL: http://localhost:4005
+      VITE_PY_API_URL: http://localhost:5005
+    depends_on:
+      - api-node
+      - api-python
+    ports:
+      - "5173:80"
 
 volumes:
   mongo_data:

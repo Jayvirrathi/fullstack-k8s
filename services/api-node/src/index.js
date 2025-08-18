@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const User = require('./models/User');
 const mongoose = require('mongoose');
 const client = require('prom-client');
 const { createLogger, format, transports } = require('winston');
@@ -123,9 +124,9 @@ app.get('/ready', async (_req, res) => {
 
 
 
-app.post('/users', async (req, res, next) => {
+app.post('/api/users', async (req, res, next) => {
   try {
-    const user = new User({ name: req.body });
+    const user = new User(req.body);
     await user.save();
     res.send(user);
   } catch (err) {
@@ -133,7 +134,7 @@ app.post('/users', async (req, res, next) => {
   }
 });
 
-app.get('/users', async (req, res, next) => {
+app.get('/api/users', async (req, res, next) => {
   try {
     const users = await User.find().lean();
   res.send(users);
