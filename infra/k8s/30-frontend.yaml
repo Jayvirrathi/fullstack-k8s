@@ -26,9 +26,24 @@ spec:
         - name: web
           image: web-frontend:dev
           imagePullPolicy: IfNotPresent
-          ports: [{ containerPort: 80 }]
+          ports:
+            - containerPort: 80
+          # run as root so nginx can bind :80 and write /run/nginx.pid
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
           env:
+            # route through Ingress from the browser
             - name: VITE_NODE_API_URL
               value: "http://api-node.ms-starter.svc.cluster.local"
             - name: VITE_PY_API_URL
               value: "http://api-python.ms-starter.svc.cluster.local"
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: 80 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
