@@ -39,3 +39,5 @@ spec:
               valueFrom: { configMapKeyRef: { name: app-config, key: GO_POSTGRES_DB } }
             - name: GO_DATABASE_URL
               value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@postgres.ms-starter.svc.cluster.local:5432/$(POSTGRES_DB)"
+            - name: PGSSLMODE
+              value: "disable"

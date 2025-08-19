@@ -93,6 +93,7 @@ curl -X POST http://localhost:7005/api/products \
 ```bash
 docker compose up --build
 make k8s-deploy
+kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8085:80
 ```
 
 ### Port Forward for Local Access

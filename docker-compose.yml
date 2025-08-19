@@ -13,6 +13,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-items_db}
+      GO_POSTGRES_DB: ${GO_POSTGRES_DB:-products}
     restart: unless-stopped
     ports:
       - "5435:5432"
@@ -51,9 +52,6 @@ services:
     env_file:
       - .env.example
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      GO_POSTGRES_DB: ${GO_POSTGRES_DB:-products}
       DATABASE_URL: ${GO_DATABASE_URL}
       PORT: ${GO_PORT:-7000}
     depends_on:
