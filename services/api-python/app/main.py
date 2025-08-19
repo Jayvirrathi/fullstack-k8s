@@ -37,6 +37,10 @@ def create_item(payload: ItemIn):
         db.refresh(item)
         return {"id": item.id, "name": item.name}
 
-@app.get("/health")
+@app.get("/healthz")
 async def health():
     return {"status": "ok", "service": "api-python"}
+
+@app.get("/health")
+async def health():
+    return {"ok": True}

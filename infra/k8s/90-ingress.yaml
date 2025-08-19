@@ -39,3 +39,10 @@ spec:
             name: api-python
             port:
               number: 80
+      - path: /api-go(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: api-go
+            port:
+              number: 80

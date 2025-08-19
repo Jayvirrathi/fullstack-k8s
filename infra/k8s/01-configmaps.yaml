@@ -6,3 +6,4 @@ metadata:
 data:
   MONGO_DB: users_db
   POSTGRES_DB: items_db
+  GO_POSTGRES_DB: products

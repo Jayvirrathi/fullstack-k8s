@@ -45,6 +45,22 @@ services:
     ports:
       - "5005:5000"
 
+  api-go:
+    build: ./services/api-go
+    image: api-go:dev   
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      GO_POSTGRES_DB: ${GO_POSTGRES_DB:-products}
+      DATABASE_URL: ${GO_DATABASE_URL}
+      PORT: ${GO_PORT:-7000}
+    depends_on:
+      - postgres
+    ports:
+      - "7005:7000"
+
   web-frontend:
     build: ./services/web-frontend
     image: web-frontend:dev   
@@ -53,9 +69,11 @@ services:
     environment:
       VITE_NODE_API_URL: http://localhost:4005
       VITE_PY_API_URL: http://localhost:5005
+      VITE_GO_API_URL: http://localhost:7005
     depends_on:
       - api-node
       - api-python
+      - api-go
     ports:
       - "5173:80"
 

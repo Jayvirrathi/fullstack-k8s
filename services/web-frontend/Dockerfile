@@ -11,16 +11,21 @@ FROM nginx:1.27-alpine
 # Copy build output
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Optimized config for SPA + caching + gzip
+# Server block for SPA + caching + gzip
+# (this is your existing server config)
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Main Nginx config: set PID to /tmp and remove `user` directive
+COPY nginx.main.conf /etc/nginx/nginx.conf
 
 # Simple health endpoint (static file)
 RUN printf "ok\n" > /usr/share/nginx/html/healthz
 
 # Non-root (compatible with k8s securityContext: runAsNonRoot: true)
-# nginx user exists in this image
-RUN chown -R nginx:nginx /var/cache/nginx /var/run /usr/share/nginx/html /etc/nginx
+# No need to chown /run; we don't write there anymore
+RUN chown -R nginx:nginx /var/cache/nginx /usr/share/nginx/html /etc/nginx
 USER nginx
 
 EXPOSE 80
+# No need to override pid here since nginx.conf handles it
 CMD ["nginx", "-g", "daemon off;"]

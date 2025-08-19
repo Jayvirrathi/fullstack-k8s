@@ -39,6 +39,8 @@ spec:
               value: "http://api-node.ms-starter.svc.cluster.local"
             - name: VITE_PY_API_URL
               value: "http://api-python.ms-starter.svc.cluster.local"
+            - name: VITE_GO_API_URL
+              value: "http://api-go.ms-starter.svc.cluster.local"
           readinessProbe:
             httpGet: { path: /, port: 80 }
             initialDelaySeconds: 2
