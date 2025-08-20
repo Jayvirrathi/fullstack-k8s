@@ -26,8 +26,7 @@ spec:
       containers:
         - name: postgres
           image: postgres:16
-          ports:
-            - containerPort: 5432
+          ports: [{ containerPort: 5432 }]
           env:
             - name: POSTGRES_USER
               valueFrom: { secretKeyRef: { name: app-secrets, key: POSTGRES_USER } }
@@ -35,3 +34,42 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: POSTGRES_PASSWORD } }
             - name: POSTGRES_DB
               valueFrom: { configMapKeyRef: { name: app-config, key: POSTGRES_DB } }
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-go
+  namespace: ms-starter
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres-go
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-go
+  namespace: ms-starter
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: postgres-go }
+  template:
+    metadata:
+      labels: { app: postgres-go }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports: [{ containerPort: 5432 }]
+          env:
+            - name: POSTGRES_USER
+              valueFrom: { secretKeyRef: { name: app-secrets, key: GO_POSTGRES_USER } }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: app-secrets, key: GO_POSTGRES_PASSWORD } }
+            - name: POSTGRES_DB
+              valueFrom: { configMapKeyRef: { name: app-config, key: GO_POSTGRES_DB } }
+          # Optional: add a volume & PVC here if you want persistence

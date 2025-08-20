@@ -2,10 +2,10 @@
 
 This repository provides a **starter microservices architecture** with:
 
-* **Node.js API** (Node.js + MongoDB) — Users
-* **FastAPI (Python) API** (FastAPI + Postgres) — Items
-* **GO API** (Go + Postgres) — Products
-* **React frontend** (Vite + React) — calls all 3 APIs
+* **Node.js API** — Users service (Node.js + MongoDB)
+* **FastAPI API** — Items service (FastAPI + Postgres)
+* **Go API** — Products service (Go + Postgres)
+* **React frontend** — Vite + React app that consumes all APIs
 
 Infrastructure is included to run **locally with Docker Compose** or in **Kubernetes**.
 ---
@@ -24,10 +24,10 @@ frontend/          # React frontend
 
 ## 🐳 Running with Docker Compose
 
-### Build & Start
+### Start (Build & Run)
 
 ```bash
-docker compose up --build
+make docker-up
 ```
 
 Development mode:
@@ -39,7 +39,7 @@ docker compose -f docker-compose-dev.yml up --build
 ### Stop
 
 ```bash
-docker compose down
+make docker-down
 ```
 
 ### Verify Endpoints
@@ -48,10 +48,10 @@ docker compose down
 # Node.js API
 curl http://localhost:4005/health
 
-# FastAPI service
+# FastAPI API
 curl http://localhost:5005/health
 
-# Go service
+# Go API
 curl http://localhost:7005/health
 
 # React frontend
@@ -61,76 +61,122 @@ open http://localhost:5173
 ### Sample Requests
 
 ```bash
-# Create a user (Node.js API)
+# Node.js (Users)
 curl -X POST http://localhost:4005/api/users \
   -H "Content-Type: application/json" \
   -d '{"name":"Alice","email":"alice@example.com"}'
 
-# Create an item (FastAPI service)
+# FastAPI (Items)
 curl -X POST http://localhost:5005/api/items \
   -H "Content-Type: application/json" \
   -d '{"name":"Sample Item"}'
 
-# Create an product (Go service)
+# Go (Products)
 curl -X POST http://localhost:7005/api/products \
- -H "Content-Type: application/json" \
- -d '{"name":"Widget"}'
+  -H "Content-Type: application/json" \
+  -d '{"name":"Widget"}'
 ```
+
+---
 
 ## ✅ Health Check Endpoints
 
 * **Node.js API** → `GET /health` (port **4005**)
-* **FastAPI service** → `GET /health` (port **5005**)
-* **Go service** → `GET /health` (port **7005**)
-* **React frontend** → runs on port **5173**
+* **FastAPI API** → `GET /health` (port **5005**)
+* **Go API** → `GET /health` (port **7005**)
+* **React frontend** → port **5173**
 
 ---
 
 ## ☸️ Running on Kubernetes
 
-### 1. Deploy 
+### Deploy
 
 ```bash
-docker compose up --build
+make k8s-up
 make k8s-deploy
-kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8085:80
+make k8s-forward PORT=8085
 ```
 
-### Port Forward for Local Access
+### Port Forward
 
 ```bash
-kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8085:80
+make k8s-forward PORT=8085
 ```
 
-#### Example Requests
+### Example Requests
 
 ```bash
-# Create a user (Node.js API)
+# Node.js (Users)
 curl -X POST http://127.0.0.1.nip.io:8085/api-node/api/users \
   -H "Content-Type: application/json" \
   -d '{"name":"Alice","email":"alice@example.com"}'
 
-# Create an item (FastAPI service)
+# FastAPI (Items)
 curl -X POST http://127.0.0.1.nip.io:8085/api-python/api/items \
   -H "Content-Type: application/json" \
   -d '{"name":"Sample Item"}'
 
-# Create an item (Go service)
-curl -X POST http://127.0.0.1.nip.io:8085/api-go/api/items \
+# Go (Products)
+curl -X POST http://127.0.0.1.nip.io:8085/api-go/api/products \
   -H "Content-Type: application/json" \
   -d '{"name":"Widget"}'
-
 ```
 
-#### Health Check Endpoints
+---
+
+## 📈 Load Testing with Autocannon
+
+### Parallel API Calls
+
+```bash
+npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-node/api/users & \
+npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-python/api/items & \
+npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-go/api/products & \
+wait
+```
+
+### Individual API Calls
+
+```bash
+npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-node/api/users
+npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-python/api/items
+npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-go/api/products
+```
+
+---
+
+## 📊 Metrics Server Setup (Kubernetes)
+
+```bash
+kubectl get deployment metrics-server -n kube-system
+kubectl get apiservices | grep metrics
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+kubectl logs -n kube-system deploy/metrics-server
+
+# Edit configuration
+export KUBE_EDITOR="nano"
+kubectl -n kube-system edit deploy/metrics-server
+# add under containers[0].args:
+# - --kubelet-insecure-tls
+# - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
+
+kubectl -n kube-system rollout status deploy/metrics-server
+kubectl -n kube-system logs deploy/metrics-server --tail=50
+```
+
+---
+
+## 🔍 Kubernetes Health Check Endpoints
 
 * **Node.js API** → [http://127.0.0.1.nip.io:8085/api-node/health](http://127.0.0.1.nip.io:8085/api-node/health)
 * **FastAPI API** → [http://127.0.0.1.nip.io:8085/api-python/health](http://127.0.0.1.nip.io:8085/api-python/health)
 * **Go API** → [http://127.0.0.1.nip.io:8085/api-go/health](http://127.0.0.1.nip.io:8085/api-go/health)
-* **Web Frontend** → [http://127.0.0.1.nip.io:8085/](http://127.0.0.1.nip.io:8085/)
+* **Frontend** → [http://127.0.0.1.nip.io:8085/](http://127.0.0.1.nip.io:8085/)
 
 ---
-
 
 ## 🔧 Resource Management
 
@@ -141,14 +187,14 @@ kubectl get pods
 kubectl get services
 ```
 
-### Delete All Resources
+### Delete All
 
 ```bash
 kubectl delete all --all
 pkill -f "kubectl port-forward"
 ```
 
-### Delete Specific Resources
+### Delete Specific
 
 ```bash
 kubectl delete services --all

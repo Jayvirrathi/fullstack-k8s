@@ -32,10 +32,66 @@ spec:
               value: "4000"
             - name: MONGO_DB
               valueFrom: { configMapKeyRef: { name: app-config, key: MONGO_DB } }
-            # bring the same secret into the API pod
             - name: MONGO_USER
               valueFrom: { secretKeyRef: { name: app-secrets, key: MONGO_USER } }
             - name: MONGO_PASSWORD
               valueFrom: { secretKeyRef: { name: app-secrets, key: MONGO_PASSWORD } }
             - name: MONGO_URI
               value: "mongodb://$(MONGO_USER):$(MONGO_PASSWORD)@mongo.ms-starter.svc.cluster.local:27017/?authSource=admin&directConnection=true"
+          # Probes
+          readinessProbe:
+            tcpSocket:
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            tcpSocket:
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
+          # Resources to support HPA (utilization uses requests as baseline)
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-node
+  namespace: ms-starter
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-node
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
