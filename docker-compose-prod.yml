@@ -13,12 +13,23 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-items_db}
-      GO_POSTGRES_DB: ${GO_POSTGRES_DB:-products}
     restart: unless-stopped
     ports:
       - "5435:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_python_data:/var/lib/postgresql/data
+
+  postgres-go:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${GO_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${GO_POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${GO_POSTGRES_DB:-products}
+    restart: unless-stopped
+    ports:
+      - "5436:5432"
+    volumes:
+      - pg_go_data:/var/lib/postgresql/data
 
   api-node:
     build: ./services/api-node
@@ -55,18 +66,15 @@ services:
       DATABASE_URL: ${GO_DATABASE_URL}
       PORT: ${GO_PORT:-7000}
     depends_on:
-      - postgres
+      - postgres-go
     ports:
       - "7005:7000"
 
   web-frontend:
     build:
       context: ./services/web-frontend
-      args:
-      - VITE_NODE_API_URL=http://api-node.ms-starter.svc.cluster.local
-      - VITE_PY_API_URL=http://api-python.ms-starter.svc.cluster.local
-      - VITE_GO_API_URL=http://api-go.ms-starter.svc.cluster.local
-    image: web-frontend:dev
+      dockerfile: Dockerfile.prod
+    image: web-frontend:prod
     env_file:
       - .env.example
     depends_on:
@@ -78,4 +86,5 @@ services:
 
 volumes:
   mongo_data:
-  pg_data:
+  pg_python_data:
+  pg_go_data:

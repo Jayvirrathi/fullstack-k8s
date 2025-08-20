@@ -1,8 +1,19 @@
+docker-build:
+	docker compose build
+
 docker-up:
 	docker compose up --build
 
 docker-down:
 	docker compose down
+
+k8s-live:
+	make k8s-build
+	make k8s-deploy
+	make k8s-forward PORT=8085
+
+k8s-build:
+	docker compose -f docker-compose-prod.yml build
 
 k8s-up:
 	docker compose -f docker-compose-prod.yml up --build
@@ -26,7 +37,7 @@ k8s-hpa:
 
 k8s-delete:
 	kubectl delete -f infra/k8s/
-	pkill -f "kubectl port-forward"
+	pkill -f "kubectl port-forward" || true
 # 	kubectl delete all --all
 
 k8s-status:

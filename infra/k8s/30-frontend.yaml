@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: web-frontend:dev
+          image: web-frontend:prod
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -33,14 +33,6 @@ spec:
             runAsUser: 0
             runAsGroup: 0
             allowPrivilegeEscalation: false
-          env:
-            # route through Ingress from the browser
-            - name: VITE_NODE_API_URL
-              value: "http://api-node.ms-starter.svc.cluster.local"
-            - name: VITE_PY_API_URL
-              value: "http://api-python.ms-starter.svc.cluster.local"
-            - name: VITE_GO_API_URL
-              value: "http://api-go.ms-starter.svc.cluster.local"
           readinessProbe:
             httpGet: { path: /, port: 80 }
             initialDelaySeconds: 2

@@ -22,7 +22,10 @@ export default function App() {
         <h2>Users (Node + Mongo)</h2>
         <pre>{JSON.stringify(users, null, 2)}</pre>
         <button onClick={async () => {
-          await fetch(`${NODE_API}/api/users`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:'Alice', email:'alice@example.com'})});
+          const randomNum = Math.floor(Math.random() * 10000); 
+          const email = `alice${randomNum}@example.com`;
+          const name = `alice ${randomNum}`;
+          await fetch(`${NODE_API}/api/users`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name:name, email:email})});
           const res = await fetch(`${NODE_API}/api/users`); setUsers(await res.json());
         }}>Add Sample User</button>
       </section>

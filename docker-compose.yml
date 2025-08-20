@@ -75,10 +75,6 @@ services:
     image: web-frontend:dev   
     env_file:
       - .env.example
-    environment:
-      VITE_NODE_API_URL: http://localhost:4005
-      VITE_PY_API_URL: http://localhost:5005
-      VITE_GO_API_URL: http://localhost:7005
     depends_on:
       - api-node
       - api-python

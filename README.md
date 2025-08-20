@@ -93,15 +93,7 @@ curl -X POST http://localhost:7005/api/products \
 ### Deploy
 
 ```bash
-make k8s-up
-make k8s-deploy
-make k8s-forward PORT=8085
-```
-
-### Port Forward
-
-```bash
-make k8s-forward PORT=8085
+make k8s-live
 ```
 
 ### Example Requests
@@ -121,6 +113,9 @@ curl -X POST http://127.0.0.1.nip.io:8085/api-python/api/items \
 curl -X POST http://127.0.0.1.nip.io:8085/api-go/api/products \
   -H "Content-Type: application/json" \
   -d '{"name":"Widget"}'
+
+# React frontend
+open http://127.0.0.1.nip.io:8085
 ```
 
 ---
