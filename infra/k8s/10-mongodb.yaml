@@ -33,3 +33,10 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: MONGO_USER } }
             - name: MONGO_INITDB_ROOT_PASSWORD
               valueFrom: { secretKeyRef: { name: app-secrets, key: MONGO_PASSWORD } }
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+      volumes:
+        - name: mongo-data
+          persistentVolumeClaim:
+            claimName: mongo-pvc

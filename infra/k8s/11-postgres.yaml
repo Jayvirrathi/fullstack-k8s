@@ -34,7 +34,15 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: POSTGRES_PASSWORD } }
             - name: POSTGRES_DB
               valueFrom: { configMapKeyRef: { name: app-config, key: POSTGRES_DB } }
-
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: pg-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pg-data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -72,4 +80,12 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: GO_POSTGRES_PASSWORD } }
             - name: POSTGRES_DB
               valueFrom: { configMapKeyRef: { name: app-config, key: GO_POSTGRES_DB } }
-          # Optional: add a volume & PVC here if you want persistence
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: pg-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pg-data
+          persistentVolumeClaim:
+            claimName: postgres-go-pvc
