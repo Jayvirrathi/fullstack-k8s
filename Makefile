@@ -60,6 +60,9 @@ k8s-delete-no-db:
 	kubectl delete deployment,service,ingress -n $(NS) --all --ignore-not-found
 	pkill -f "kubectl port-forward" || true
 
+k8s-kill:
+	pkill -f "kubectl port-forward" || true
+
 k8s-status:
 	kubectl -n ms-starter get all
 
