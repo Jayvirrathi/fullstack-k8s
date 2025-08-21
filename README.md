@@ -195,3 +195,32 @@ pkill -f "kubectl port-forward"
 kubectl delete services --all
 kubectl delete deployments --all
 ```
+
+
+## Grafana
+```bash
+kubectl -n default port-forward svc/grafana     33005:3000 &
+kubectl -n default port-forward svc/loki        33105:3100 &
+kubectl -n default port-forward svc/prometheus  9097:9090 &
+```
+
+## API Call
+```bash
+npx autocannon -c 20 -d 240 http://localhost:31010/users
+```
+---
+
+## Grafana
+- URL: [http://localhost:33005/?orgId=1](http://localhost:33005/?orgId=1)  
+- Username: `admin`  
+- Default Password: `admin`  
+- New Password: `Admin@123456`  
+- Node.js Dashboard ID: `11159`
+
+## Prometheus
+- URL: `http://localhost:9097/`
+
+## Loki
+- URL: `http://localhost:33105/metrics`
+
+---
