@@ -53,15 +53,15 @@ k8s-hpa:
 
 k8s-delete:
 	kubectl delete -f infra/k8s/
-	pkill -f "kubectl port-forward" || true
+	pkill -f "kubectl.*port-forward" || true
 # 	kubectl delete all --all
 
 k8s-delete-no-db:
 	kubectl delete deployment,service,ingress -n $(NS) --all --ignore-not-found
-	pkill -f "kubectl port-forward" || true
+	pkill -f "kubectl.*port-forward" || true
 
 k8s-kill:
-	pkill -f "kubectl port-forward" || true
+	pkill -f "kubectl.*port-forward" || true
 
 k8s-status:
 	kubectl -n ms-starter get all
