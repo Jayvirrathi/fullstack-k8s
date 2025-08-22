@@ -1,11 +1,12 @@
-# 🚀 Microservices Starter (Node+Mongo, FastAPI+Postgres, Go+Postgres, React) with Docker & Kubernetes
+# 🚀 Microservices Starter Kit (Node+Mongo, FastAPI+Postgres, Go+Postgres, React) with Docker, Kubernetes, Prometheus & Grafana
 
-This repository provides a **starter microservices architecture** with:
+This repository provides a **ready-to-use microservices architecture** with a modern stack:
 
-* **Node.js API** — Users service (Node.js + MongoDB)
-* **FastAPI API** — Items service (FastAPI + Postgres)
-* **Go API** — Products service (Go + Postgres)
-* **React frontend** — Vite + React app that consumes all APIs
+* **Node.js API** — Users service (**Node.js + MongoDB**)
+* **FastAPI API** — Items service (**FastAPI + PostgreSQL**)
+* **Go API** — Products service (**Go + PostgreSQL**)
+* **React Frontend** — Vite + React app consuming all APIs
+* **Monitoring & Observability** — Prometheus, Grafana, Loki, LGTM stack
 
 Infrastructure is included to run **locally with Docker Compose** or in **Kubernetes**.
 ---
@@ -17,12 +18,12 @@ infra/k8s/         # Kubernetes manifests
 api-node/          # Node.js + MongoDB service
 api-python/        # FastAPI + Postgres service
 api-go/            # Go + Postgres service
-frontend/          # React frontend
+frontend/          # React frontend (Vite)
 ```
 
 ---
 
-## 🐳 Running with Docker Compose
+## 🐳 Running Locally with Docker Compose
 
 ### Start (Build & Run)
 
@@ -46,32 +47,41 @@ make docker-down
 
 ```bash
 # Node.js API
-curl http://localhost:4005/health
+curl http://localhost:4005/health  
 
 # FastAPI API
-curl http://localhost:5005/health
+curl http://localhost:5005/health  
 
 # Go API
-curl http://localhost:7005/health
+curl http://localhost:7005/health  
 
 # React frontend
 open http://localhost:5173
 ```
 
-### Sample Requests
+---
+
+## 📦 Sample API Requests
+
+**Node.js (Users):**
 
 ```bash
-# Node.js (Users)
 curl -X POST http://localhost:4005/api/users \
   -H "Content-Type: application/json" \
   -d '{"name":"Alice","email":"alice@example.com"}'
+```
 
-# FastAPI (Items)
+**FastAPI (Items):**
+
+```bash
 curl -X POST http://localhost:5005/api/items \
   -H "Content-Type: application/json" \
   -d '{"name":"Sample Item"}'
+```
 
-# Go (Products)
+**Go (Products):**
+
+```bash
 curl -X POST http://localhost:7005/api/products \
   -H "Content-Type: application/json" \
   -d '{"name":"Widget"}'
@@ -84,7 +94,7 @@ curl -X POST http://localhost:7005/api/products \
 * **Node.js API** → `GET /health` (port **4005**)
 * **FastAPI API** → `GET /health` (port **5005**)
 * **Go API** → `GET /health` (port **7005**)
-* **React frontend** → port **5173**
+* **React Frontend** → `http://localhost:5173`
 
 ---
 
@@ -120,44 +130,32 @@ open http://127.0.0.1.nip.io:8085
 
 ---
 
-## 📈 Load Testing with Autocannon
+## 📈 Load Testing
 
-### Parallel API Calls
-
-```bash
-npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-node/api/users & \
-npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-python/api/items & \
-npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-go/api/products & \
-wait
-```
-
-### Individual API Calls
+Run parallel API load tests using **Autocannon**:
 
 ```bash
-npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-node/api/users
-npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-python/api/items
-npx autocannon -c 20 -d 240 http://127.0.0.1.nip.io:8085/api-go/api/products
+make load-test
 ```
 
 ---
 
-## 📊 Metrics Server Setup (Kubernetes)
+## 📊 Metrics & Observability (Kubernetes)
+
+### Metrics Server Setup
 
 ```bash
-kubectl get deployment metrics-server -n kube-system
-kubectl get apiservices | grep metrics
-
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
 
-kubectl logs -n kube-system deploy/metrics-server
-
-# Edit configuration
-export KUBE_EDITOR="nano"
 kubectl -n kube-system edit deploy/metrics-server
-# add under containers[0].args:
+# Add under containers[0].args:
 # - --kubelet-insecure-tls
 # - --kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP
+```
 
+Verify:
+
+```bash
 kubectl -n kube-system rollout status deploy/metrics-server
 kubectl -n kube-system logs deploy/metrics-server --tail=50
 ```
@@ -178,49 +176,54 @@ kubectl -n kube-system logs deploy/metrics-server --tail=50
 ### List Resources
 
 ```bash
-kubectl get pods
-kubectl get services
+make k8s-watch
+make k8s-service
 ```
 
 ### Delete All
 
 ```bash
-kubectl delete all --all
-pkill -f "kubectl port-forward"
+make k8s-delete
 ```
 
-### Delete Specific
+### Delete All (keep database data)
 
 ```bash
-kubectl delete services --all
-kubectl delete deployments --all
+make k8s-delete-no-db
 ```
 
-
-## Grafana
-```bash
-kubectl -n default port-forward svc/grafana     33005:3000 &
-kubectl -n default port-forward svc/loki        33105:3100 &
-kubectl -n default port-forward svc/prometheus  9097:9090 &
-```
-
-## API Call
-```bash
-npx autocannon -c 20 -d 240 http://localhost:31010/users
-```
 ---
 
-## Grafana
-- URL: [http://localhost:33005/?orgId=1](http://localhost:33005/?orgId=1)  
-- Username: `admin`  
-- Default Password: `admin`  
-- New Password: `Admin@123456`  
-- Node.js Dashboard ID: `11159`
+## 📡 Monitoring Stack
 
-## Prometheus
-- URL: `http://localhost:9097/`
+### LGTM Stack
 
-## Loki
-- URL: `http://localhost:33105/metrics`
+```bash
+make port-forward-lgtm
+```
+
+### Grafana
+
+* URL: [http://localhost:33005/?orgId=1](http://localhost:33005/?orgId=1)
+* Username: `admin`
+* Default Password: `admin`
+* New Password: `Admin@123456`
+* **Node.js Dashboard ID**: `11159`
+
+### Prometheus
+
+* URL: [http://localhost:9097/](http://localhost:9097/)
+
+### Loki
+
+* URL: [http://localhost:33105/metrics](http://localhost:33105/metrics)
 
 ---
+
+## ✅ Key Improvements in this Setup
+
+* Consistent **API structure** across all services.
+* Unified **local + Kubernetes workflows** with `make` commands.
+* Preconfigured **health checks** for quick debugging.
+* Built-in **metrics, logging, and monitoring** stack.
+* Supports **horizontal scalability** with Kubernetes.
