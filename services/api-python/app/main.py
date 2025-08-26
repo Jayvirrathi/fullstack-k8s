@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
 # --- Optional Loki logging (doesn't crash if package/env missing) ---
-LOKI_URL = os.getenv("LOKI_URL", "http://loki.default.svc.cluster.local:3100")
+LOKI_URL = os.getenv("LOKI_URL", "http://loki:3100")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
 logger = logging.getLogger("api-python")

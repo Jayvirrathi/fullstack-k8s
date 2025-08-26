@@ -33,42 +33,48 @@ services:
 
   api-node:
     build: ./services/api-node
-    image: api-node:dev     
+    image: api-node:dev
     env_file:
       - .env.example
     environment:
       MONGO_URI: ${MONGO_URI}
       PORT: ${NODE_PORT:-4000}
+      ITEMS_API_URL: ${ITEMS_API_URL}
+      PRODUCTS_API_URL: ${PRODUCTS_API_URL}
+      WEB_ORIGIN: ${WEB_ORIGIN}
     depends_on:
       - mongo
-    ports:
-      - "4005:4000"
+    ports: ["4005:4000"]
 
   api-python:
     build: ./services/api-python
-    image: api-python:dev   
+    image: api-python:dev
     env_file:
       - .env.example
     environment:
       DATABASE_URL: ${POSTGRES_URI}
       PORT: ${PY_PORT:-5000}
+      USERS_API_URL: ${USERS_API_URL}
+      PRODUCTS_API_URL: ${PRODUCTS_API_URL}
+      WEB_ORIGIN: ${WEB_ORIGIN}
     depends_on:
       - postgres
-    ports:
-      - "5005:5000"
+    ports: ["5005:5000"]
 
   api-go:
     build: ./services/api-go
-    image: api-go:dev   
+    image: api-go:dev
     env_file:
       - .env.example
     environment:
       DATABASE_URL: ${GO_DATABASE_URL}
       PORT: ${GO_PORT:-7000}
+      USERS_API_URL: ${USERS_API_URL}
+      ITEMS_API_URL: ${ITEMS_API_URL}
+      WEB_ORIGIN: ${WEB_ORIGIN}
     depends_on:
       - postgres-go
-    ports:
-      - "7005:7000"
+    ports: ["7005:7000"]
 
   web-frontend:
     build: ./services/web-frontend

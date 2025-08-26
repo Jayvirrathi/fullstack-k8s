@@ -8,9 +8,12 @@ const client = require('prom-client');
 const { createLogger, format, transports } = require('winston');
 const LokiTransport = require('winston-loki');
 const expressWinston = require('express-winston');
-
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const PY_BASE = process.env.ITEMS_API_URL || 'http://localhost:5005';
+const GO_BASE = process.env.PRODUCTS_API_URL || 'http://localhost:7005';
 
 app.use(cors());
 app.use(express.json());
@@ -115,26 +118,113 @@ app.get('/ready', async (_req, res) => {
   }
 });
 
+// ---------- Routes (users + orchestration) ----------
 
-
+/* -------------------- UPDATED: create user + fan-out -------------------- */
 app.post('/api/users', async (req, res, next) => {
   try {
     const user = new User(req.body);
     await user.save();
-    res.send(user);
+
+    // fan-out to Python & Go in parallel (best-effort)
+    const headers = {};
+    if (req.headers['x-request-id']) headers['x-request-id'] = req.headers['x-request-id'];
+
+    const itemName = `${user.name}'s item`;
+    const productName = `${user.name}'s product`;
+
+    const [itemRes, prodRes] = await Promise.allSettled([
+      axios.post(`${PY_BASE}/api/items`, { name: itemName }, { timeout: 4000, headers }),
+      axios.post(`${GO_BASE}/api/products`, { name: productName }, { timeout: 4000, headers }),
+    ]);
+
+    const createdItem = itemRes.status === 'fulfilled' ? itemRes.value.data : null;
+    const createdProduct = prodRes.status === 'fulfilled' ? prodRes.value.data : null;
+
+    const warnings = [];
+    if (itemRes.status === 'rejected') warnings.push('Failed to create item in api-python');
+    if (prodRes.status === 'rejected') warnings.push('Failed to create product in api-go');
+
+    res.status(201).json({ user, createdItem, createdProduct, warnings });
+  } catch (err) {
+    next(err);
+  }
+});
+/* ----------------------------------------------------------------------- */
+
+app.get('/api/users', async (req, res, next) => {
+  try {
+    const users = await User.find().lean();
+    res.send(users);
   } catch (err) {
     next(err);
   }
 });
 
-app.get('/api/users', async (req, res, next) => {
+/* -------------------- ADD: proxy helpers -------------------- */
+// Forward-create an item for a user (Python)
+app.post('/api/users/:id/items', async (req, res) => {
   try {
-    const users = await User.find().lean();
-  res.send(users);
-  } catch (err) {
-    next(err);
+    const { name } = req.body;
+    const { data } = await axios.post(`${PY_BASE}/api/items`, { name }, { timeout: 4000 });
+    res.status(201).json(data);
+  } catch (e) {
+    res.status(502).json({ error: 'Failed to create item via api-python' });
   }
 });
+
+// Forward-create a product for a user (Go)
+app.post('/api/users/:id/products', async (req, res) => {
+  try {
+    const { name } = req.body;
+    const { data } = await axios.post(`${GO_BASE}/api/products`, { name }, { timeout: 4000 });
+    res.status(201).json(data);
+  } catch (e) {
+    res.status(502).json({ error: 'Failed to create product via api-go' });
+  }
+});
+/* ----------------------------------------------------------------------- */
+
+/* -------------------- ADD: aggregation endpoints -------------------- */
+// Combine user + items + products (note: items/products are unfiltered in current services)
+app.get('/api/users/:id/summary', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).lean();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const [itemsRes, productsRes] = await Promise.allSettled([
+      axios.get(`${PY_BASE}/api/items`, { timeout: 4000 }),
+      axios.get(`${GO_BASE}/api/products`, { timeout: 4000 }),
+    ]);
+
+    res.json({
+      user,
+      items: itemsRes.status === 'fulfilled' ? itemsRes.value.data : [],
+      products: productsRes.status === 'fulfilled' ? productsRes.value.data : [],
+    });
+  } catch {
+    res.status(502).json({ error: 'Failed to build summary' });
+  }
+});
+
+// Quick all-up aggregation
+app.get('/api/summary', async (_req, res) => {
+  try {
+    const users = await User.find().lean();
+    const [itemsRes, productsRes] = await Promise.allSettled([
+      axios.get(`${PY_BASE}/api/items`, { timeout: 4000 }),
+      axios.get(`${GO_BASE}/api/products`, { timeout: 4000 }),
+    ]);
+    res.json({
+      users,
+      items: itemsRes.status === 'fulfilled' ? itemsRes.value.data : [],
+      products: productsRes.status === 'fulfilled' ? productsRes.value.data : [],
+    });
+  } catch {
+    res.status(502).json({ error: 'Failed to aggregate' });
+  }
+});
+/* ----------------------------------------------------------------------- */
 
 // Error logger -> Winston/Loki
 app.use(
