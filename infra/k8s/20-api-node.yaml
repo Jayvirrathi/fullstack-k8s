@@ -40,9 +40,9 @@ spec:
         - containerPort: 4000
         env:
         - name: ITEMS_API_URL
-          value: http://127.0.0.1.nip.io:8085/api-python
+          value: http://api-python:80
         - name: PRODUCTS_API_URL
-          value: http://127.0.0.1.nip.io:8085/api-go
+          value: http://api-go:80
         - name: PORT
           value: '4000'
         - name: MONGO_DB
