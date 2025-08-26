@@ -37,7 +37,7 @@ k8s-up:
 	docker compose -f docker-compose-prod.yml up --build
 
 k8s-deploy:
-	kubectl apply -f infra/k8s/
+	kubectl apply --server-side -f infra/k8s/
 
 k8s-forward:
 	kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller $(PORT):80
