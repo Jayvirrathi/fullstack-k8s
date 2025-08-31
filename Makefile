@@ -4,6 +4,9 @@ KUBECTL  = kubectl -n default
 NS ?= ms-starter
 CONCURRENCY ?= 20
 DURATION ?= 240
+VERSION ?= v1.0
+IMAGES := api-node api-python api-go
+
 # -------------------------------------------------------------------
 # Docker targets
 # -------------------------------------------------------------------
@@ -32,6 +35,42 @@ k8s-live:
 
 k8s-build:
 	docker compose -f docker-compose-prod.yml build
+
+k8s-build-compose:
+	docker compose -f docker-compose-prod.yml build
+	@for img in $(IMAGES); do \
+	  echo "Tagging $$img:dev -> $$img:$(VERSION)"; \
+	  docker tag $$img:dev $$img:$(VERSION); \
+	done
+
+k8s-rollout:
+	@for img in $(IMAGES); do \
+	  echo "Rolling $$img -> $$img:$(VERSION)"; \
+	  kubectl -n $(NS) set image deploy/$$img $$img=$$img:$(VERSION); \
+	  kubectl -n $(NS) rollout status deploy/$$img; \
+	done
+
+k8s-release: k8s-build-compose k8s-rollout
+	@echo "Release $(VERSION) complete."
+
+k8s-rollback:
+	@if [ -z "$(VERSION)" ]; then echo "Usage: make k8s-rollback-to VERSION=v1.1"; exit 2; fi
+	@for img in $(IMAGES); do \
+	  echo "Rolling $$img back to tag $(VERSION)"; \
+	  kubectl -n $(NS) set image deploy/$$img $$img=$$img:$(VERSION) || exit 1; \
+	  kubectl -n $(NS) rollout status deploy/$$img || exit 1; \
+	done
+
+k8s-images:
+	kubectl -n $(NS) get deploy \
+	  -o custom-columns=NAME:.metadata.name,IMAGE:.spec.template.spec.containers[*].image
+
+k8s-history:
+	@for img in $(IMAGES); do \
+	  echo "== $$img =="; \
+	  kubectl -n $(NS) rollout history deploy/$$img || exit 1; \
+	  echo ""; \
+	done
 
 k8s-up:
 	docker compose -f docker-compose-prod.yml up --build

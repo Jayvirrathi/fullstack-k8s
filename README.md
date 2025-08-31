@@ -106,6 +106,32 @@ curl -X POST http://localhost:7005/api/products \
 make k8s-live
 ```
 
+## Release Versions
+
+```bash
+make k8s-release VERSION=v1.1
+make k8s-release VERSION=v1.2
+```
+
+## Rollback Version
+
+```bash
+make k8s-rollback VERSION=v1.1
+```
+
+## View Current Images
+
+```bash
+make k8s-images
+```
+
+## View Current Deployment
+
+* **Release:** `make k8s-release VERSION=<version>`
+* **Rollback:** `make k8s-rollback VERSION=<version>`
+* **Images:** `make k8s-images`
+
+
 ### Example Requests
 
 ```bash
