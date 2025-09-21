@@ -33,7 +33,7 @@ services:
 
   api-node:
     build: ./services/api-node
-    image: api-node:dev
+    image: api-node:local
     env_file:
       - .env.example
     environment:
@@ -48,7 +48,7 @@ services:
 
   api-python:
     build: ./services/api-python
-    image: api-python:dev
+    image: api-python:local
     env_file:
       - .env.example
     environment:
@@ -63,7 +63,7 @@ services:
 
   api-go:
     build: ./services/api-go
-    image: api-go:dev
+    image: api-go:local
     env_file:
       - .env.example
     environment:
@@ -78,7 +78,7 @@ services:
 
   web-frontend:
     build: ./services/web-frontend
-    image: web-frontend:dev   
+    image: web-frontend:local   
     env_file:
       - .env.example
     depends_on:
